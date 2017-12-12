@@ -1,25 +1,21 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 
-	cli "gopkg.in/urfave/cli.v1"
-
-	"fmt"
+	"gopkg.in/urfave/cli.v1"
 
 	"github.com/Polarishq/cli-suite/src/config"
 	"github.com/Polarishq/middleware/framework/log"
-	"encoding/base64"
-
-	"bufio"
-	"net/http"
-
-	"bytes"
-	"io/ioutil"
-
-	"encoding/json"
 )
 
 const maxBufferSize = 1000000 // server side max is 1,048,576
@@ -72,7 +68,7 @@ func main() {
 			auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, clientSecret)))
 			i := Nova{"nova-cli", hostname, auth}
 			doneChan := i.Start(tr)
-			<- doneChan
+			<-doneChan
 		}
 		return nil
 	}
@@ -80,7 +76,6 @@ func main() {
 	app.Commands = nil
 	app.Run(os.Args)
 }
-
 
 // Input defines metadata sent to log-input
 type Nova struct {
@@ -90,8 +85,8 @@ type Nova struct {
 }
 
 type novaEvent struct {
-	Source string `json:"source"`
-	Entity string `json:"entity"`
+	Source string            `json:"source"`
+	Entity string            `json:"entity"`
 	Event  map[string]string `json:"event"`
 }
 
@@ -135,12 +130,12 @@ func (n *Nova) batchEvents(inChan chan string) (outChan chan *bytes.Buffer) {
 			}
 
 			select {
-			case <- ticker:
+			case <-ticker:
 				outChan <- buffer
 				buffer = &bytes.Buffer{}
 				writer.Reset(buffer)
 			default:
-				line, ok := <- inChan
+				line, ok := <-inChan
 				if !ok {
 					outChan <- buffer
 					return
@@ -159,7 +154,7 @@ func (n *Nova) batchEvents(inChan chan string) (outChan chan *bytes.Buffer) {
 }
 
 func (n *Nova) sendToNova(inChan chan *bytes.Buffer) (doneChan chan struct{}) {
-	httpClient:= &http.Client{
+	httpClient := &http.Client{
 		Transport: http.DefaultTransport,
 		Timeout:   10 * time.Second,
 	}
@@ -167,11 +162,11 @@ func (n *Nova) sendToNova(inChan chan *bytes.Buffer) (doneChan chan struct{}) {
 	doneChan = make(chan struct{})
 	go func() {
 		for buffer := range inChan {
-			req, err := http.NewRequest("POST", urlDefaultHost + urlDefaultPath, buffer)
+			req, err := http.NewRequest("POST", urlDefaultHost+urlDefaultPath, buffer)
 			if err != nil {
 				panic(err)
 			}
-			req.Header.Set("Authorization", "Basic " + n.Auth)
+			req.Header.Set("Authorization", "Basic "+n.Auth)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("User-Agent", "nova-cli-0.3.0")
 			resp, err := httpClient.Do(req)
@@ -189,4 +184,3 @@ func (n *Nova) sendToNova(inChan chan *bytes.Buffer) (doneChan chan struct{}) {
 	}()
 	return
 }
-

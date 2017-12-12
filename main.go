@@ -15,7 +15,8 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/Polarishq/cli-suite/src/config"
-	"github.com/Polarishq/middleware/framework/log"
+	log "github.com/Sirupsen/logrus"
+	"crypto/rand"
 )
 
 const maxBufferSize = 1000000 // server side max is 1,048,576
@@ -33,18 +34,16 @@ func main() {
 	app.Authors = []cli.Author{{Name: "Splunk Nova"}}
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose, v"},
-		cli.BoolFlag{Name: "debug, vv"},
-		cli.BoolFlag{Name: "quiet, q"},
+		cli.BoolFlag{Name: "tee"},
+		cli.StringFlag{Name: "stats, s"},
 		cli.StringFlag{Name: "apiKeyID, ki", EnvVar: "NOVA_API_KEY_ID"},
 		cli.StringFlag{Name: "apiKeySecret, ks", EnvVar: "NOVA_API_KEY_SECRET"},
 	}
 	app.Action = func(clic *cli.Context) error {
-		if clic.Bool("debug") {
-			log.SetDebug(true)
-		} else if clic.Bool("verbose") {
-			log.SetDebug(false)
+		if clic.Bool("verbose") {
+			log.SetLevel(log.DebugLevel)
 		} else {
-			log.SetError()
+			log.SetLevel(log.WarnLevel)
 		}
 
 		clientID := clic.String("apiKeyID")
@@ -56,19 +55,31 @@ func main() {
 		}
 
 		stat, _ := os.Stdin.Stat()
-		if (stat.Mode() & os.ModeCharDevice) == 0 {
+
+		if (stat.Mode() & os.ModeCharDevice) == 0 { // ingest mode
 			var tr io.Reader
-			if clic.Bool("quiet") {
-				tr = os.Stdin
-			} else {
+			if clic.Bool("tee") {
 				tr = io.TeeReader(os.Stdin, os.Stdout)
+			} else {
+				tr = os.Stdin
 			}
 
 			hostname, _ := os.Hostname()
+			source := "nova-cli-" + pseudoRandomID()
 			auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, clientSecret)))
-			i := Nova{"nova-cli", hostname, auth}
-			doneChan := i.Start(tr)
-			<-doneChan
+
+			nova := Nova{source, hostname, auth, nil}
+			nova.Start(tr)
+			errorsEncountered := false
+			for e := range nova.ErrChan {
+				errorsEncountered = true
+				log.Error(e)
+			}
+			if errorsEncountered {
+				os.Exit(1)
+			}
+		} else { // search mode
+			fmt.Printf("Would have searched: %+v\n", clic.Args().Get(0))
 		}
 		return nil
 	}
@@ -77,12 +88,24 @@ func main() {
 	app.Run(os.Args)
 }
 
+func pseudoRandomID() (string) {
+	b := make([]byte, 7)
+	_, err := rand.Read(b)
+	if err != nil {
+			return "00000000000000"
+		}
+	return fmt.Sprintf("%X", b)
+}
+
 // Input defines metadata sent to log-input
 type Nova struct {
 	Source string
 	Entity string
 	Auth   string
+	ErrChan chan error
 }
+
+
 
 type novaEvent struct {
 	Source string            `json:"source"`
@@ -92,6 +115,7 @@ type novaEvent struct {
 
 // Start sends lines from stdin to nova
 func (n *Nova) Start(r io.Reader) (doneChan chan struct{}) {
+	n.ErrChan = make(chan error, 5)
 	return n.sendToNova(n.batchEvents(n.readFromStdin(r)))
 }
 
@@ -106,7 +130,8 @@ func (n *Nova) readFromStdin(r io.Reader) (outChan chan string) {
 			outChan <- line
 		}
 		if err := scanner.Err(); err != nil {
-			panic(err)
+			n.ErrChan <- err
+			return
 		}
 	}()
 	return
@@ -143,7 +168,8 @@ func (n *Nova) batchEvents(inChan chan string) (outChan chan *bytes.Buffer) {
 				nEvent := novaEvent{Source: n.Source, Entity: n.Entity, Event: map[string]string{"raw": line}}
 				bytesArray, err := json.Marshal(nEvent)
 				if err != nil {
-					panic(err)
+					n.ErrChan <- err
+					return
 				}
 				writer.Write(bytesArray)
 				writer.Flush() // for accurately calculating buffer.Len()
@@ -160,27 +186,38 @@ func (n *Nova) sendToNova(inChan chan *bytes.Buffer) (doneChan chan struct{}) {
 	}
 
 	doneChan = make(chan struct{})
+
 	go func() {
+		defer close(doneChan)
+		defer close(n.ErrChan)
 		for buffer := range inChan {
 			req, err := http.NewRequest("POST", urlDefaultHost+urlDefaultPath, buffer)
 			if err != nil {
-				panic(err)
+				n.ErrChan <- err
+				return
 			}
 			req.Header.Set("Authorization", "Basic "+n.Auth)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("User-Agent", "nova-cli-0.3.0")
 			resp, err := httpClient.Do(req)
 			if err != nil {
-				panic(err)
+				n.ErrChan <- err
+				return
 			}
 			body, err := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 			if err != nil {
-				panic(err)
+				n.ErrChan <- err
+				return
 			}
-			fmt.Printf("Response: %+v", string(body))
+			if resp.StatusCode != 200 {
+				n.ErrChan <- fmt.Errorf("error sending to splunknova. X-SPLUNK-REQ-ID=%+v",
+					resp.Header.Get("X-SPLUNK-REQ-ID"))
+				log.Warnf("%+v", string(body))
+				return
+			}
+			log.Infof("Response: %+v", string(body))
 		}
-		doneChan <- struct{}{}
 	}()
 	return
 }

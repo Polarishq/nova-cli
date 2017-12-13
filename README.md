@@ -33,11 +33,12 @@ brew install nova-cli
 
 ## Linux & Windows
 
-You'll need to ensure `go` is installed and `GOROOT` and `GOPATH` are set.
+You'll need to ensure `go` is installed and `GOROOT`, `GOPATH`, and `GOBIN` are set.
 
 ````
 go get github.com/splunknova/nova-cli
-go install nova.go
+cd $GOPATH/src/github.com/splunknova/nova-cli
+go install nova.go // will install to $GOBIN
 ````
 
 _Help with making Linux and Windows installations better will be appreciated!_

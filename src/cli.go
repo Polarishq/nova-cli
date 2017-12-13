@@ -9,7 +9,6 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/Polarishq/cli-suite/src/config"
 	log "github.com/Sirupsen/logrus"
 	"crypto/rand"
 )
@@ -43,11 +42,6 @@ func Foo(searchKeywords string) *cli.App {
 
 		clientID := clic.String("apiKeyID")
 		clientSecret := clic.String("apiKeySecret")
-		if len(clientID) == 0 || len(clientSecret) == 0 {
-			config.GetKeys()
-			fmt.Fprint(os.Stderr, "Error: NOVA_API_KEY_ID or NOVA_API_KEY_SECRET either not set or passed in using -ki and -ks\n")
-			os.Exit(1)
-		}
 
 		stat, _ := os.Stdin.Stat()
 
@@ -69,6 +63,8 @@ func Foo(searchKeywords string) *cli.App {
 			if errorsEncountered {
 				os.Exit(1)
 			}
+		} else if searchKeywords == "" {
+			cli.ShowAppHelp(clic)
 		} else { // search mode
 			log.Infof("Searching keywords='%+v'\n", searchKeywords)
 			log.Infof("Searching transforms='%+v'\n", clic.String("transforms"))

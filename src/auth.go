@@ -1,11 +1,11 @@
 package src
 
 import (
-	"os"
-	"io/ioutil"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"encoding/base64"
+	"io/ioutil"
+	"os"
 	"os/user"
 
 	log "github.com/Sirupsen/logrus"
@@ -44,7 +44,7 @@ func GetCredentials(novaUrl string) (clientID, clientSecret string, err error) {
 	}
 	novaConfig := configFile{}
 	json.Unmarshal(rawFile, &novaConfig)
-	for _, nc := range novaConfig.Nova{
+	for _, nc := range novaConfig.Nova {
 		if nc.NovaURL == novaUrl {
 			clientID, clientSecret = nc.NovaID, nc.NovaSecret
 		}
@@ -64,7 +64,7 @@ func SaveCredentials(novaUrl string) (clientID, clientSecret string, err error) 
 	rawFile, _ := ioutil.ReadFile(getConfigFilePath())
 	if rawFile != nil {
 		json.Unmarshal(rawFile, &currentConfig)
-		for _, nc := range currentConfig.Nova{
+		for _, nc := range currentConfig.Nova {
 			if nc.NovaURL == novaUrl {
 				err = fmt.Errorf("%s already contains an entry for %s. Please modify the file by hand to update keys.",
 					getConfigFilePath(), novaUrl)
@@ -120,6 +120,5 @@ func validateCredentials(novaUrl, clientID, clientSecret string) error {
 func getConfigFilePath() string {
 	usr, _ := user.Current()
 	dir := usr.HomeDir
-	return dir+configFileRelPath
+	return dir + configFileRelPath
 }
-

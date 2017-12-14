@@ -1,13 +1,13 @@
 package src
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 )
 
 type NovaSearch struct {
-	Auth string
+	Auth    string
 	NovaURL string
 	ErrChan chan error
 }
@@ -26,7 +26,7 @@ type NovaResultsStats struct {
 // NewNovaSearch creates a new search obj
 func NewNovaSearch(novaURL, auth string) *NovaSearch {
 	return &NovaSearch{
-		Auth: auth,
+		Auth:    auth,
 		NovaURL: novaURL,
 		ErrChan: make(chan error, 5),
 	}
@@ -49,10 +49,10 @@ func (n *NovaSearch) Search(keywords, transforms, report string) {
 	log.Debugf("Searching report='%+v'", report)
 
 	params := map[string]string{
-		"keywords": keywords,
+		"keywords":   keywords,
 		"transforms": transforms,
-		"report": report,
-		"count": defaultSearchResultsCount,
+		"report":     report,
+		"count":      defaultSearchResultsCount,
 	}
 
 	results, err := Get(n.NovaURL+eventsURLPath, params, n.Auth)

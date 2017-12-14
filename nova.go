@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"github.com/splunknova/nova-cli/src"
+	"os"
 	"strings"
 )
 

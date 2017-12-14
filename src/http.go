@@ -1,11 +1,11 @@
 package src
 
 import (
-	"net/url"
-	"io"
-	"net/http"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -42,7 +42,7 @@ func Get(targetURL string, params map[string]string, authHeader string) ([]byte,
 }
 
 func doRequest(request *http.Request) ([]byte, error) {
-	request.Header.Set("User-Agent", "nova-cli-" + AppVersion)
+	request.Header.Set("User-Agent", "nova-cli-"+AppVersion)
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := HTTPClient.Do(request)
 	if err != nil {
@@ -61,7 +61,7 @@ func doRequest(request *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-func convertToValues(data map[string]string) (url.Values) {
+func convertToValues(data map[string]string) url.Values {
 	values := make(url.Values)
 	for k, v := range data {
 		values.Add(k, v)

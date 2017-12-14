@@ -11,7 +11,6 @@ import (
 	"net/url"
 )
 
-
 func NewCLI(searchKeywords string) *cli.App {
 	app := cli.NewApp()
 	app.Name = "nova-cli"
@@ -24,27 +23,27 @@ func NewCLI(searchKeywords string) *cli.App {
 	app.Authors = []cli.Author{{Name: "join us on slack: community.splunknova.com"}}
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name: "login",
+			Name:  "login",
 			Usage: "validate and save credentials to disk",
 		},
 		cli.StringFlag{
-			Name: "stats, s",
+			Name:  "stats, s",
 			Usage: "shorthand for -r 'stats ...'",
 		},
 		cli.StringFlag{
-			Name: "count, c",
+			Name:  "count, c",
 			Usage: "shorthand for -r 'stats count'",
 		},
 		cli.StringFlag{
-			Name: "transforms, t",
+			Name:  "transforms, t",
 			Usage: "apply transformations to each matching event. e.g. -t 'eval mb = gb * 1024'",
 		},
 		cli.StringFlag{
-			Name: "report, r",
+			Name:  "report, r",
 			Usage: "apply aggregations to the search results. e.g. -r 'stats avg(mb) perc90(mb)'",
 		},
 		cli.BoolFlag{
-			Name: "tee",
+			Name:  "tee",
 			Usage: "tee to stdout after sending data to splunknova. Only valid when piping stdin into nova-cli",
 		},
 		cli.StringFlag{
@@ -53,7 +52,7 @@ func NewCLI(searchKeywords string) *cli.App {
 			Usage: "point to a different nova URL (used for testing)",
 		},
 		cli.BoolFlag{
-			Name: "verbose, v",
+			Name:  "verbose, v",
 			Usage: "turn on debug information",
 		},
 	}
@@ -130,5 +129,3 @@ func NewCLI(searchKeywords string) *cli.App {
 	app.Commands = nil
 	return app
 }
-
-

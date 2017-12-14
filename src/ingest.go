@@ -8,17 +8,15 @@ import (
 	"io"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"crypto/rand"
+	log "github.com/Sirupsen/logrus"
 )
-
-
 
 // NovaIngest creates a new ingest obj
 type NovaIngest struct {
-	Source string
-	Entity string
-	Auth   string
+	Source  string
+	Entity  string
+	Auth    string
 	NovaURL string
 	ErrChan chan error
 }
@@ -32,16 +30,16 @@ type novaEvent struct {
 // NewNovaIngest defines metadata sent to log-input
 func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
 	return &NovaIngest{
-		Source: "nova-cli-" + pseudoRandomID(),
-		Entity: entity,
-		Auth: auth,
+		Source:  "nova-cli-" + pseudoRandomID(),
+		Entity:  entity,
+		Auth:    auth,
 		NovaURL: novaURL,
 		ErrChan: make(chan error, 5),
 	}
 }
 
 // Start sends lines from stdin to nova
-func (n *NovaIngest) Start(r io.Reader) () {
+func (n *NovaIngest) Start(r io.Reader) {
 	n.sendToNova(n.batchEvents(n.readIn(r)))
 }
 
@@ -114,7 +112,7 @@ func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer
 	return
 }
 
-func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) () {
+func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) {
 	go func() {
 		defer close(n.ErrChan)
 		for buffer := range inChan {
@@ -128,8 +126,7 @@ func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) () {
 	return
 }
 
-
-func pseudoRandomID() (string) {
+func pseudoRandomID() string {
 	b := make([]byte, 7)
 	_, err := rand.Read(b)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"strings"
 )
 
 type NovaSearch struct {
@@ -32,8 +33,8 @@ func NewNovaSearch(novaURL, auth string) *NovaSearch {
 	}
 }
 
-// BlockedErrorLogger blocks on the pipeline to complete and logs all errors
-func (n *NovaSearch) BlockedErrorLogger() (errorsEncountered bool) {
+// WaitAndLogErrors blocks on the pipeline to complete and logs all errors
+func (n *NovaSearch) WaitAndLogErrors() (errorsEncountered bool) {
 	for e := range n.ErrChan {
 		errorsEncountered = true
 		log.Error(e)
@@ -47,6 +48,8 @@ func (n *NovaSearch) Search(keywords, transforms, report string) {
 	log.Debugf("Searching keywords='%+v'", keywords)
 	log.Debugf("Searching transforms='%+v'", transforms)
 	log.Debugf("Searching report='%+v'", report)
+
+	keywords = fmt.Sprintf("source=%s* %s", novaCLISourcePrefix, keywords)
 
 	params := map[string]string{
 		"keywords":   keywords,
@@ -70,22 +73,29 @@ func (n *NovaSearch) Search(keywords, transforms, report string) {
 	} else {
 		n1 := NovaResultsStats{}
 		json.Unmarshal(results, &n1)
-		maxwidthK, maxwidthV := 1, 1
 		for _, ne := range n1.NovaEvents {
-			for k, v := range ne {
-				if len(k) > maxwidthK {
-					maxwidthK = len(k)
-				}
-				if len(v) > maxwidthV {
-					maxwidthV = len(v)
-				}
-			}
-			maxwidthK = maxwidthK + 2
-			maxwidthV = maxwidthV + 2
-			strFormat := fmt.Sprintf("|%%%ds | %%-%ds|\n", maxwidthK, maxwidthV)
-			for k, v := range ne {
-				fmt.Printf(strFormat, k, v)
-			}
+			printTable(ne)
 		}
 	}
+}
+
+func printTable(data map[string]string) {
+	maxwidthK, maxwidthV := 1, 1
+
+	for k, v := range data {
+		if len(k) > maxwidthK {
+			maxwidthK = len(k)
+		}
+		if len(v) > maxwidthV {
+			maxwidthV = len(v)
+		}
+	}
+	maxwidthK = maxwidthK + 2
+	maxwidthV = maxwidthV + 2
+	strFormat := fmt.Sprintf("│%%%ds │ %%-%ds│\n", maxwidthK, maxwidthV)
+	fmt.Println("┌" + strings.Repeat("─", maxwidthK+1) + "┬" + strings.Repeat("─", maxwidthV+1) + "┐")
+	for k, v := range data {
+		fmt.Printf(strFormat, k, v)
+	}
+	fmt.Println("└" + strings.Repeat("─", maxwidthK+1) + "┴" + strings.Repeat("─", maxwidthV+1) + "┘")
 }

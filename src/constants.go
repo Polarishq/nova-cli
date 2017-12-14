@@ -16,3 +16,4 @@ const ingestionBufferSizeBytes = 1000000 // server side max is 1,048,576
 const ingestionBufferTimeout = 1 * time.Second
 
 const defaultSearchResultsCount = "20"
+const novaCLISourcePrefix = "nova-cli-"

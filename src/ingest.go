@@ -30,7 +30,7 @@ type novaEvent struct {
 // NewNovaIngest defines metadata sent to log-input
 func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
 	return &NovaIngest{
-		Source:  "nova-cli-" + pseudoRandomID(),
+		Source:  novaCLISourcePrefix + pseudoRandomID(),
 		Entity:  entity,
 		Auth:    auth,
 		NovaURL: novaURL,
@@ -43,8 +43,8 @@ func (n *NovaIngest) Start(r io.Reader) {
 	n.sendToNova(n.batchEvents(n.readIn(r)))
 }
 
-// BlockedErrorLogger blocks on the pipeline to complete and logs all errors
-func (n *NovaIngest) BlockedErrorLogger() (errorsEncountered bool) {
+// WaitAndLogErrors blocks on the pipeline to complete and logs all errors
+func (n *NovaIngest) WaitAndLogErrors() (errorsEncountered bool) {
 	for e := range n.ErrChan {
 		errorsEncountered = true
 		log.Error(e)

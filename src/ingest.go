@@ -6,24 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"crypto/rand"
 )
 
-const maxBufferSize = 1000000 // server side max is 1,048,576
-const maxBufferTime = 1 * time.Second
-const urlDefaultHost = "https://api.splunknova.com"
-const urlDefaultPath = "/v1/events"
 
 
-// NovaIngest defines metadata sent to log-input
+// NovaIngest creates a new ingest obj
 type NovaIngest struct {
 	Source string
 	Entity string
 	Auth   string
+	NovaURL string
 	ErrChan chan error
 }
 
@@ -34,11 +30,12 @@ type novaEvent struct {
 }
 
 // NewNovaIngest defines metadata sent to log-input
-func NewNovaIngest(source, entity, auth string) *NovaIngest {
+func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
 	return &NovaIngest{
-		Source: source,
+		Source: "nova-cli-" + pseudoRandomID(),
 		Entity: entity,
 		Auth: auth,
+		NovaURL: novaURL,
 		ErrChan: make(chan error, 5),
 	}
 }
@@ -76,7 +73,7 @@ func (n *NovaIngest) readIn(r io.Reader) (outChan chan string) {
 }
 
 func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer) {
-	ticker := time.Tick(maxBufferTime)
+	ticker := time.Tick(ingestionBufferTimeout)
 
 	buffer := &bytes.Buffer{}
 	writer := bufio.NewWriter(buffer)
@@ -86,7 +83,7 @@ func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer
 	go func() {
 		defer close(outChan)
 		for {
-			if buffer.Len() > maxBufferSize {
+			if buffer.Len() > ingestionBufferSizeBytes {
 				outChan <- buffer
 				buffer = &bytes.Buffer{}
 				writer.Reset(buffer)
@@ -118,41 +115,25 @@ func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer
 }
 
 func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) () {
-	httpClient := &http.Client{
-		Transport: http.DefaultTransport,
-		Timeout:   10 * time.Second,
-	}
-
 	go func() {
 		defer close(n.ErrChan)
 		for buffer := range inChan {
-			req, err := http.NewRequest("POST", urlDefaultHost+urlDefaultPath, buffer)
+			_, err := Post(n.NovaURL+eventsURLPath, buffer, n.Auth)
 			if err != nil {
 				n.ErrChan <- err
 				return
 			}
-			req.Header.Set("Authorization", "Basic "+n.Auth)
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("User-Agent", "nova-cli-0.3.0")
-			resp, err := httpClient.Do(req)
-			if err != nil {
-				n.ErrChan <- err
-				return
-			}
-			body, err := ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
-			if err != nil {
-				n.ErrChan <- err
-				return
-			}
-			if resp.StatusCode != 200 {
-				n.ErrChan <- fmt.Errorf("error sending to splunknova. X-SPLUNK-REQ-ID=%+v",
-					resp.Header.Get("X-SPLUNK-REQ-ID"))
-				log.Warnf("%+v", string(body))
-				return
-			}
-			log.Infof("Response: %+v", string(body))
 		}
 	}()
 	return
+}
+
+
+func pseudoRandomID() (string) {
+	b := make([]byte, 7)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "00000000000000"
+	}
+	return fmt.Sprintf("%X", b)
 }

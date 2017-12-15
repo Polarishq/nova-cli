@@ -4,6 +4,13 @@ A convenient command line tool to pipe logs to [splunknova.com](https://www.splu
 
 # Usage
 
+## Credentials
+Credentials can be conveniently saved in a `~/.nova` file by running
+
+````
+nova login
+````
+
 ## Sending logs
 ````
 echo "my first log" | nova
@@ -15,11 +22,13 @@ tail -f /var/log/system.log | nova
 
 ## Searching logs
 ````
-nova ERROR
+nova search ERROR
 
-nova ERROR -s count
+nova search ERROR -c
 
-nova "my_key=" -r "stats count avg(my_key)"
+nova search ERROR -s count
+
+nova search "my_key=" -r "stats count avg(my_key)"
 ````
 
 # Installation

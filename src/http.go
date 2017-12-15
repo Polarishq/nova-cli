@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	log "github.com/Sirupsen/logrus"
+	"runtime"
 )
 
 var HTTPClient *http.Client
@@ -42,7 +43,7 @@ func Get(targetURL string, params map[string]string, authHeader string) ([]byte,
 }
 
 func doRequest(request *http.Request) ([]byte, error) {
-	request.Header.Set("User-Agent", "nova-cli-"+AppVersion)
+	request.Header.Set("User-Agent", GetUserAgent())
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := HTTPClient.Do(request)
 	if err != nil {
@@ -67,4 +68,8 @@ func convertToValues(data map[string]string) url.Values {
 		values.Add(k, v)
 	}
 	return values
+}
+
+func GetUserAgent() string {
+	return "nova-cli-" + AppVersion + "/" + runtime.GOOS + "-" + runtime.GOARCH
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"strings"
 )
 
 type NovaSearch struct {
@@ -42,9 +41,8 @@ func (n *NovaSearch) WaitAndLogErrors() (errorsEncountered bool) {
 	return
 }
 
-type sstr [][]string
 
-func (n *NovaSearch) Search(keywords, transforms, report string) {
+func (n *NovaSearch) Search(keywords, transforms, report string) (StrMatrix) {
 	defer close(n.ErrChan)
 
 	log.Debugf("Searching keywords='%+v'", keywords)
@@ -66,68 +64,21 @@ func (n *NovaSearch) Search(keywords, transforms, report string) {
 	}
 	log.Debugf("Raw Results: %+v\n\n", string(results))
 
+	data := StrMatrix{}
 	if report == "" {
 		n1 := NovaResults{}
 		json.Unmarshal(results, &n1)
-		xx := sstr{}
 		for _, ne := range n1.NovaEvents {
-			//fmt.Printf("%5d %s %s\n", n, ne.Time, ne.Raw)
-			xx = append(xx, []string{ne.Time, ne.Raw})
+			data = append(data, []string{ne.Time, ne.Raw})
 		}
-		printTable2(xx)
 	} else {
 		n1 := NovaResultsStats{}
 		json.Unmarshal(results, &n1)
-		for _, ne := range n1.NovaEvents {
-			printTable(ne)
+		for k, v := range n1.NovaEvents[0] {
+			data = append(data, []string{k, v})
 		}
 	}
-}
-
-const rawLimit = 100
-
-func breakString(bigString string) []string {
-	if len(bigString) < rawLimit {
-		return []string{bigString}
-	} else {
-		return append([]string{bigString[0:rawLimit-1]}, breakString(bigString[rawLimit:])...)
-	}
-}
-
-func printTable2(data sstr) {
-	maxwidthF1 := 30
-	maxwidthF2 := rawLimit
-	strFormat := fmt.Sprintf("│%%%ds │ %%-%ds│\n", maxwidthF1, maxwidthF2)
-	fmt.Println("┌" + strings.Repeat("─", maxwidthF1+1) + "┬" + strings.Repeat("─", maxwidthF2+1) + "┐")
-	for _, datum := range data {
-		f1 := datum[0]
-		f2 := breakString(datum[1])
-		for _, ff2 := range f2 {
-			fmt.Printf(strFormat, f1, ff2)
-			f1 = ""
-		}
-	}
-	fmt.Println("└" + strings.Repeat("─", maxwidthF1+1) + "┴" + strings.Repeat("─", maxwidthF2+1) + "┘")
+	return data
 }
 
 
-func printTable(data map[string]string) {
-	maxwidthK, maxwidthV := 1, 1
-
-	for k, v := range data {
-		if len(k) > maxwidthK {
-			maxwidthK = len(k)
-		}
-		if len(v) > maxwidthV {
-			maxwidthV = len(v)
-		}
-	}
-	maxwidthK = maxwidthK + 2
-	maxwidthV = maxwidthV + 2
-	strFormat := fmt.Sprintf("│%%%ds │ %%-%ds│\n", maxwidthK, maxwidthV)
-	fmt.Println("┌" + strings.Repeat("─", maxwidthK+1) + "┬" + strings.Repeat("─", maxwidthV+1) + "┐")
-	for k, v := range data {
-		fmt.Printf(strFormat, k, v)
-	}
-	fmt.Println("└" + strings.Repeat("─", maxwidthK+1) + "┴" + strings.Repeat("─", maxwidthV+1) + "┘")
-}

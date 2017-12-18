@@ -9,6 +9,8 @@ const defaultNovaURL = "https://api.splunknova.com"
 const validateCredsURLPath = "/v1/account"
 const eventsURLPath = "/v1/events"
 
+const metricsURLPath = "/v1/metrics"
+
 const configFileRelPath = "/.nova"
 const httpTimeout = 10 * time.Second
 

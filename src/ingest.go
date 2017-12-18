@@ -19,6 +19,7 @@ type NovaIngest struct {
 	Auth    string
 	NovaURL string
 	ErrChan chan error
+	Marshaler func(string, string, string) ([]byte, error)
 }
 
 type novaEvent struct {
@@ -37,6 +38,41 @@ func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
 		ErrChan: make(chan error, 5),
 	}
 }
+
+func NewNovaIngestForEvents(novaURL, entity, auth string) *NovaIngest {
+	return &NovaIngest{
+		Source:  novaCLISourcePrefix + pseudoRandomID(),
+		Entity:  entity,
+		Auth:    auth,
+		NovaURL: novaURL,
+		ErrChan: make(chan error, 5),
+		Marshaler: EventMarshaler,
+	}
+}
+
+func NewNovaIngestForMetrics(novaURL, entity, auth string) *NovaIngest {
+	return &NovaIngest{
+		Source:  novaCLISourcePrefix + pseudoRandomID(),
+		Entity:  entity,
+		Auth:    auth,
+		NovaURL: novaURL,
+		ErrChan: make(chan error, 5),
+		Marshaler: MetricMarshaler,
+	}
+}
+
+
+func EventMarshaler(source, entity, line string) ([]byte, error) {
+	nEvent := novaEvent{Source: source, Entity: entity, Event: map[string]string{"raw": line}}
+	return json.Marshal(nEvent)
+}
+
+
+func MetricMarshaler(source, entity, line string) ([]byte, error) {
+	nEvent := novaEvent{Source: entity, Entity: entity, Event: map[string]string{"raw foo": line}}
+	return json.Marshal(nEvent)
+}
+
 
 // Start sends lines from stdin to nova
 func (n *NovaIngest) Start(r io.Reader) {
@@ -98,8 +134,7 @@ func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer
 					outChan <- buffer
 					return
 				}
-				nEvent := novaEvent{Source: n.Source, Entity: n.Entity, Event: map[string]string{"raw": line}}
-				bytesArray, err := json.Marshal(nEvent)
+				bytesArray, err := n.Marshaler(n.Source, n.Entity, line)
 				if err != nil {
 					n.ErrChan <- err
 					return

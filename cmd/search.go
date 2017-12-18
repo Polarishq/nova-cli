@@ -37,10 +37,16 @@ var searchCmd = &cobra.Command{
 			reportStr = reportVal
 		}
 
-		novaSearch.Search(args[0], transformsVal, reportStr)
+		data := novaSearch.Search(args[0], transformsVal, reportStr)
 		errorsEncountered := novaSearch.WaitAndLogErrors()
 		if errorsEncountered {
 			os.Exit(1)
+		}
+
+		if table, _ := rootCmd.Flags().GetBool("table"); table {
+			data.PrintTable()
+		} else {
+			data.PrintList()
 		}
 	},
 }

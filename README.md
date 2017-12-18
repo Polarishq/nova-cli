@@ -70,7 +70,7 @@ nova metric ls
 # simple aggregations
 nova metric get cpu.usage -a avg,max
 
-# grouping by dimensions (TODO, doesn't work yet)
+# grouping by dimensions
 nova metric get cpu.usage -a avg -g role
 ````
 

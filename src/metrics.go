@@ -90,6 +90,9 @@ func (n *NovaMetricsSearch) GetAggregations(metric_names, aggregations, groupBy,
 	m := []map[string]string{}
 	json.Unmarshal(results, &m)
 	data := StrMatrix{}
+	if len(m) < 1 {
+		return data, nil
+	}
 	for k, v := range m[0] {
 		data = append(data, []string{k, v})
 	}

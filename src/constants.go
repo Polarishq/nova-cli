@@ -4,12 +4,13 @@ import "time"
 
 const AppVersion = "0.3.0"
 
-const defaultNovaURL = "https://api.splunknova.com"
+const DefaultNovaURL = "https://api.splunknova.com"
 
 const validateCredsURLPath = "/v1/account"
 const eventsURLPath = "/v1/events"
 
-const metricsURLPath = "/v1/metrics"
+const metricsURLSearchPath = "/v1/metrics"
+const metricsURLIngestPath = "/v1/metrics?type=custom"
 
 const configFileRelPath = "/.nova"
 const httpTimeout = 10 * time.Second

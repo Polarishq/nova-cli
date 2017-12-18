@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 
 			hostname, _ := os.Hostname()
 
-			novaIngest := src.NewNovaIngest(NovaURL, hostname, authHeader)
+			novaIngest := src.NewNovaIngestForEvents(NovaURL, hostname, authHeader)
 			novaIngest.Start(tr)
 			errorsEncountered := novaIngest.WaitAndLogErrors()
 			if errorsEncountered {
@@ -66,12 +66,11 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().BoolP("table", "", false, "tabulate results")
-	rootCmd.PersistentFlags().StringVar(&NovaURL, "novaurl", "https://api.splunknova.com", "point to a different splunknova URL (used for testing)")
+	rootCmd.PersistentFlags().StringVar(&NovaURL, "novaurl", src.DefaultNovaURL, "point to a different splunknova URL (used for testing)")
 	rootCmd.PersistentFlags().MarkHidden("novaurl")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "print debug information")
 
 	rootCmd.Flags().BoolP("tee", "t", false, "tee to stdout after sending data to splunknova. only valid when piping stdin into nova-cli")
-
 }
 
 func initConfig() {

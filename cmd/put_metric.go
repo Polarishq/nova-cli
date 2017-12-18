@@ -1,17 +1,3 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
@@ -21,12 +7,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
+	"encoding/json"
 )
 
 // putCmd represents the put command
 var putCmd = &cobra.Command{
 	Use:   "put",
-	Short: "Create a metric",
+	Short: "Create a metric, e.g. (nova metric put cpu.usage 10 -d 'region:us-east-1')",
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		clientID, clientSecret, err := src.GetCredentials(NovaURL)
@@ -39,15 +26,33 @@ var putCmd = &cobra.Command{
 
 		hostname, _ := os.Hostname()
 
-		tr := strings.NewReader("")
+		dims, _ := cmd.Flags().GetString("dimensions")
 
-		novaIngest := src.NewNovaIngest(NovaURL, hostname, authHeader)
+		// this is so hacky :-(
+		metricBody := map[string]string{"metric_name": args[0], "_value": args[1], "entity": hostname, "source": "nova-cli"}
+		for k, v := range splitDims(dims) {
+			metricBody[k] = v
+		}
+		b, _ := json.Marshal(map[string]interface{}{"fields": metricBody})
+		tr := strings.NewReader(string(b))
+
+		novaIngest := src.NewNovaIngestForMetrics(NovaURL, hostname, authHeader)
 		novaIngest.Start(tr)
 		errorsEncountered := novaIngest.WaitAndLogErrors()
 		if errorsEncountered {
 			os.Exit(1)
 		}
 	},
+}
+
+func splitDims(dims string) map[string]string {
+	splitDims := map[string]string{}
+	dimArray := strings.Split(dims, ",")
+	for _, dim := range dimArray {
+		kv := strings.Split(dim, ":")
+		splitDims[kv[0]] = kv[1]
+	}
+	return splitDims
 }
 
 func init() {

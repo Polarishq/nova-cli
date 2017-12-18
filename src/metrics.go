@@ -5,6 +5,8 @@ import (
 	//"fmt"
 	log "github.com/Sirupsen/logrus"
 	//"strings"
+	"encoding/json"
+	"fmt"
 )
 
 type NovaMetricsSearch struct {
@@ -40,8 +42,29 @@ func (n *NovaMetricsSearch) WaitAndLogErrors() (errorsEncountered bool) {
 	return
 }
 
+func (n *NovaMetricsSearch) GetLs() (StrMatrix, error) {
+	defer close(n.ErrChan)
 
-func (n *NovaMetricsSearch) GetAggergations(metric_names, aggregations, groupBy, span string) {
+	urlFinal := n.NovaURL + metricsURLSearchPath
+
+	results, err := Get(urlFinal, nil, n.Auth)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	log.Debugf("Raw Results: %+v\n\n", string(results))
+
+	m := MetricsLSResponse{}
+	json.Unmarshal(results, &m)
+	data := StrMatrix{}
+	for k, v := range m.Metrics {
+		data = append(data, []string{fmt.Sprint(k+1), v})
+	}
+	return data, nil
+}
+
+
+func (n *NovaMetricsSearch) GetAggregations(metric_names, aggregations, groupBy, span string) (StrMatrix, error) {
 	defer close(n.ErrChan)
 
 	log.Debugf("Searching metric_names='%+v'", metric_names)
@@ -55,61 +78,20 @@ func (n *NovaMetricsSearch) GetAggergations(metric_names, aggregations, groupBy,
 		"span":           span,
 	}
 
-	urlFinal := n.NovaURL + metricsURLPath + "/" + metric_names + "/" + aggregations
+	urlFinal := n.NovaURL + metricsURLSearchPath + "/" + metric_names + "/" + aggregations
 
 	results, err := Get(urlFinal, params, n.Auth)
 	if err != nil {
 		log.Error(err)
+		return nil, err
 	}
 	log.Debugf("Raw Results: %+v\n\n", string(results))
 
-	log.Info(string(results))
+	m := []map[string]string{}
+	json.Unmarshal(results, &m)
+	data := StrMatrix{}
+	for k, v := range m[0] {
+		data = append(data, []string{k, v})
+	}
+	return data, nil
 }
-
-//const field2MaxWidth = 100
-//
-//func breakString(bigString string) []string {
-//	if len(bigString) < field2MaxWidth {
-//		return []string{bigString}
-//	} else {
-//		return append([]string{bigString[0:field2MaxWidth-1]}, breakString(bigString[field2MaxWidth:])...)
-//	}
-//}
-//
-//func printTable2(data StrMatrix) {
-//	maxwidthF1 := 30
-//	maxwidthF2 := field2MaxWidth
-//	strFormat := fmt.Sprintf("│%%%ds │ %%-%ds│\n", maxwidthF1, maxwidthF2)
-//	fmt.Println("┌" + strings.Repeat("─", maxwidthF1+1) + "┬" + strings.Repeat("─", maxwidthF2+1) + "┐")
-//	for _, datum := range data {
-//		f1 := datum[0]
-//		f2 := breakString(datum[1])
-//		for _, ff2 := range f2 {
-//			fmt.Printf(strFormat, f1, ff2)
-//			f1 = ""
-//		}
-//	}
-//	fmt.Println("└" + strings.Repeat("─", maxwidthF1+1) + "┴" + strings.Repeat("─", maxwidthF2+1) + "┘")
-//}
-//
-//
-//func printTable(data map[string]string) {
-//	maxwidthK, maxwidthV := 1, 1
-//
-//	for k, v := range data {
-//		if len(k) > maxwidthK {
-//			maxwidthK = len(k)
-//		}
-//		if len(v) > maxwidthV {
-//			maxwidthV = len(v)
-//		}
-//	}
-//	maxwidthK = maxwidthK + 2
-//	maxwidthV = maxwidthV + 2
-//	strFormat := fmt.Sprintf("│%%%ds │ %%-%ds│\n", maxwidthK, maxwidthV)
-//	fmt.Println("┌" + strings.Repeat("─", maxwidthK+1) + "┬" + strings.Repeat("─", maxwidthV+1) + "┐")
-//	for k, v := range data {
-//		fmt.Printf(strFormat, k, v)
-//	}
-//	fmt.Println("└" + strings.Repeat("─", maxwidthK+1) + "┴" + strings.Repeat("─", maxwidthV+1) + "┘")
-//}

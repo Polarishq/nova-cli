@@ -10,6 +10,7 @@ import (
 
 	"crypto/rand"
 	log "github.com/Sirupsen/logrus"
+	"strings"
 )
 
 // NovaIngest creates a new ingest obj
@@ -45,7 +46,7 @@ func NewNovaIngestForEvents(novaURL, entity, auth string) *NovaIngest {
 		Source:  novaCLISourcePrefix + pseudoRandomID(),
 		Entity:  entity,
 		Auth:    auth,
-		NovaURL: novaURL,
+		NovaURL: novaURL+eventsURLPath,
 		ErrChan: make(chan error, 5),
 		Marshaler: EventMarshaler,
 	}
@@ -56,7 +57,7 @@ func NewNovaIngestForMetrics(novaURL, entity, auth string) *NovaIngest {
 		Source:  novaCLISourcePrefix + pseudoRandomID(),
 		Entity:  entity,
 		Auth:    auth,
-		NovaURL: novaURL,
+		NovaURL: novaURL+ metricsURLIngestPath,
 		ErrChan: make(chan error, 5),
 		Marshaler: MetricMarshaler,
 	}
@@ -68,12 +69,19 @@ func EventMarshaler(source, entity, line string) ([]byte, error) {
 	return json.Marshal(nEvent)
 }
 
-
 func MetricMarshaler(source, entity, line string) ([]byte, error) {
-	nEvent := novaEvent{Source: entity, Entity: entity, Event: map[string]string{"raw foo": line}}
-	return json.Marshal(nEvent)
+	return []byte(line), nil
 }
 
+func splitDims(dims string) map[string]string {
+	splitDims := map[string]string{}
+	dimArray := strings.Split(dims, ",")
+	for _, dim := range dimArray {
+		kv := strings.Split(dim, ":")
+		splitDims[kv[0]] = kv[1]
+	}
+	return splitDims
+}
 
 // Start sends lines from stdin to nova
 func (n *NovaIngest) Start(r io.Reader) {
@@ -152,7 +160,7 @@ func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) {
 	go func() {
 		defer close(n.ErrChan)
 		for buffer := range inChan {
-			_, err := Post(n.NovaURL+eventsURLPath, buffer, n.Auth)
+			_, err := Post(n.NovaURL, buffer, n.Auth)
 			if err != nil {
 				n.ErrChan <- err
 				return

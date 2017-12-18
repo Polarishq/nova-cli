@@ -72,7 +72,6 @@ func (n *NovaMetricsSearch) GetAggregations(metric_names, aggregations, groupBy,
 	log.Debugf("Searching groupBy='%+v'", groupBy)
 	log.Debugf("Searching span='%+v'", span)
 
-
 	params := map[string]string{
 		"group_by":       groupBy,
 		"span":           span,

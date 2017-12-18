@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/splunknova/nova-cli/src"
 	"strings"
-	log "github.com/Sirupsen/logrus"
 	"os"
 )
 
@@ -13,16 +12,9 @@ var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get metrics",
 	Args: cobra.RangeArgs(1, 3),
+	PreRun: Authorize,
 	Run: func(cmd *cobra.Command, args []string) {
-		clientID, clientSecret, err := src.GetCredentials(NovaURL)
-		if err != nil {
-			log.Error(err)
-			log.Infof("Please run `nova login`")
-			os.Exit(1)
-		}
-		authHeader := src.GetBasicAuthHeader(clientID, clientSecret)
-
-		m := src.NewNovaMetricsSearch(NovaURL, authHeader)
+		m := src.NewNovaMetricsSearch(NovaURL, AuthHeader)
 
 		aggregations, _ := cmd.Flags().GetString("aggregations")
 		span, _ := cmd.Flags().GetString("span")

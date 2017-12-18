@@ -12,11 +12,14 @@ import (
 )
 
 var NovaURL string
+var AuthHeader string
+var Hostname string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "nova",
 	Short: "A convenient command line tool to pipe logs to splunknova.com and search them",
+	PreRun: Authorize,
 	Run: func(cmd *cobra.Command, args []string) {
 		stat, _ := os.Stdin.Stat()
 		if (stat.Mode() & os.ModeCharDevice) == 0 { // ingest mode
@@ -29,17 +32,7 @@ var rootCmd = &cobra.Command{
 				tr = os.Stdin
 			}
 
-			clientID, clientSecret, err := src.GetCredentials(NovaURL)
-			if err != nil {
-				log.Error(err)
-				log.Infof("Please run `nova login`")
-				os.Exit(1)
-			}
-			authHeader := src.GetBasicAuthHeader(clientID, clientSecret)
-
-			hostname, _ := os.Hostname()
-
-			novaIngest := src.NewNovaIngestForEvents(NovaURL, hostname, authHeader)
+			novaIngest := src.NewNovaIngestForEvents(NovaURL, Hostname, AuthHeader)
 			novaIngest.Start(tr)
 			errorsEncountered := novaIngest.WaitAndLogErrors()
 			if errorsEncountered {
@@ -60,6 +53,16 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func Authorize(cmd *cobra.Command, args []string) {
+	clientID, clientSecret, err := src.GetCredentials(NovaURL)
+	if err != nil {
+		log.Error(err)
+		log.Infof("Please run `nova login`")
+		os.Exit(1)
+	}
+	AuthHeader = src.GetBasicAuthHeader(clientID, clientSecret)
 }
 
 func init() {
@@ -83,5 +86,10 @@ func initConfig() {
 	if err != nil {
 		log.Errorf("%s isn't a valid NovaURL", NovaURL)
 		os.Exit(1)
+	}
+	Hostname, err = os.Hostname()
+	if err != nil {
+		log.Warnf("Error obtaining hostname: ", err)
+		Hostname = "default-hostname"
 	}
 }

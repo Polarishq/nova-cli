@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/splunknova/nova-cli/src"
 
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
 	"encoding/json"
@@ -15,28 +14,19 @@ var putCmd = &cobra.Command{
 	Use:   "put",
 	Short: "Create a metric, e.g. (nova metric put cpu.usage 10 -d 'region:us-east-1')",
 	Args: cobra.ExactArgs(2),
+	PreRun: Authorize,
 	Run: func(cmd *cobra.Command, args []string) {
-		clientID, clientSecret, err := src.GetCredentials(NovaURL)
-		if err != nil {
-			log.Error(err)
-			log.Infof("Please run `nova login`")
-			os.Exit(1)
-		}
-		authHeader := src.GetBasicAuthHeader(clientID, clientSecret)
-
-		hostname, _ := os.Hostname()
-
 		dims, _ := cmd.Flags().GetString("dimensions")
 
 		// this is so hacky :-(
-		metricBody := map[string]string{"metric_name": args[0], "_value": args[1], "entity": hostname, "source": "nova-cli"}
+		metricBody := map[string]string{"metric_name": args[0], "_value": args[1], "entity": Hostname, "source": "nova-cli"}
 		for k, v := range splitDims(dims) {
 			metricBody[k] = v
 		}
 		b, _ := json.Marshal(map[string]interface{}{"fields": metricBody})
 		tr := strings.NewReader(string(b))
 
-		novaIngest := src.NewNovaIngestForMetrics(NovaURL, hostname, authHeader)
+		novaIngest := src.NewNovaIngestForMetrics(NovaURL, Hostname, AuthHeader)
 		novaIngest.Start(tr)
 		errorsEncountered := novaIngest.WaitAndLogErrors()
 		if errorsEncountered {
@@ -50,6 +40,9 @@ func splitDims(dims string) map[string]string {
 	dimArray := strings.Split(dims, ",")
 	for _, dim := range dimArray {
 		kv := strings.Split(dim, ":")
+		if len(kv) != 2 {
+			continue
+		}
 		splitDims[kv[0]] = kv[1]
 	}
 	return splitDims

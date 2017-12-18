@@ -10,7 +10,11 @@ import (
 
 	"crypto/rand"
 	log "github.com/Sirupsen/logrus"
-	"strings"
+)
+
+const (
+	EventIngestor = iota
+	MetricIngestor = iota
 )
 
 // NovaIngest creates a new ingest obj
@@ -20,25 +24,13 @@ type NovaIngest struct {
 	Auth    string
 	NovaURL string
 	ErrChan chan error
-	Marshaler func(string, string, string) ([]byte, error)
+	Type    int
 }
 
-type novaEvent struct {
+type novaEventFormat struct {
 	Source string            `json:"source"`
 	Entity string            `json:"entity"`
 	Event  map[string]string `json:"event"`
-}
-
-// NewNovaIngest defines metadata sent to log-input
-func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
-	return &NovaIngest{
-		Source:  novaCLISourcePrefix + pseudoRandomID(),
-		Entity:  entity,
-		Auth:    auth,
-		NovaURL: novaURL,
-		ErrChan: make(chan error, 5),
-		Marshaler: EventMarshaler,
-	}
 }
 
 func NewNovaIngestForEvents(novaURL, entity, auth string) *NovaIngest {
@@ -48,7 +40,7 @@ func NewNovaIngestForEvents(novaURL, entity, auth string) *NovaIngest {
 		Auth:    auth,
 		NovaURL: novaURL+eventsURLPath,
 		ErrChan: make(chan error, 5),
-		Marshaler: EventMarshaler,
+		Type: EventIngestor,
 	}
 }
 
@@ -59,28 +51,8 @@ func NewNovaIngestForMetrics(novaURL, entity, auth string) *NovaIngest {
 		Auth:    auth,
 		NovaURL: novaURL+ metricsURLIngestPath,
 		ErrChan: make(chan error, 5),
-		Marshaler: MetricMarshaler,
+		Type: MetricIngestor,
 	}
-}
-
-
-func EventMarshaler(source, entity, line string) ([]byte, error) {
-	nEvent := novaEvent{Source: source, Entity: entity, Event: map[string]string{"raw": line}}
-	return json.Marshal(nEvent)
-}
-
-func MetricMarshaler(source, entity, line string) ([]byte, error) {
-	return []byte(line), nil
-}
-
-func splitDims(dims string) map[string]string {
-	splitDims := map[string]string{}
-	dimArray := strings.Split(dims, ",")
-	for _, dim := range dimArray {
-		kv := strings.Split(dim, ":")
-		splitDims[kv[0]] = kv[1]
-	}
-	return splitDims
 }
 
 // Start sends lines from stdin to nova
@@ -143,7 +115,7 @@ func (n *NovaIngest) batchEvents(inChan chan string) (outChan chan *bytes.Buffer
 					outChan <- buffer
 					return
 				}
-				bytesArray, err := n.Marshaler(n.Source, n.Entity, line)
+				bytesArray, err := n.marshal(line)
 				if err != nil {
 					n.ErrChan <- err
 					return
@@ -168,6 +140,17 @@ func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) {
 		}
 	}()
 	return
+}
+
+func (n *NovaIngest) marshal(line string) ([]byte, error) {
+	if n.Type == EventIngestor {
+		nEvent := novaEventFormat{Source: n.Source, Entity: n.Entity, Event: map[string]string{"raw": line}}
+		return json.Marshal(nEvent)
+	} else if n.Type == MetricIngestor {
+		return []byte(line), nil
+	} else {
+		return nil, nil
+	}
 }
 
 func pseudoRandomID() string {

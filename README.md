@@ -21,14 +21,57 @@ tail -f /var/log/system.log | nova
 ````
 
 ## Searching logs
+
+### Search for all lines containing the word "error"
 ````
-nova search ERROR
+nova search error
+````
 
-nova search ERROR -c
+### Only count the number of lines containing the word "error"
+````
+# shorthand
+nova search error -c
 
-nova search ERROR -s count
+# stats shorthand
+nova search error -s count
 
+# report command
+nova search error -r "stats count"
+````
+
+### Run stats aggregations and reporting on data
+````
+# SPL inspired syntax
 nova search "my_key=" -r "stats count avg(my_key)"
+
+# add transforms
+nova search "bytes" -t "eval mb=gb*1024" -r "stats max(mb)"
+````
+
+## Sending Metrics
+
+````
+# nova metric put <metric_name> <metric_value>
+nova metric put cpu.usage 20
+
+# tagging with dimensions
+nova metric put cpu.usage 20 -d "region:us-east-1,role:webserver"
+````
+
+## Listing Metrics
+
+````
+nova metric ls
+````
+
+## Aggregating Metrics
+
+````
+# simple aggregations
+nova metric get cpu.usage -a avg,max
+
+# grouping by dimensions (TODO, doesn't work yet)
+nova metric get cpu.usage -a avg -g role
 ````
 
 # Installation

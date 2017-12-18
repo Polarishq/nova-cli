@@ -36,6 +36,7 @@ func NewNovaIngest(novaURL, entity, auth string) *NovaIngest {
 		Auth:    auth,
 		NovaURL: novaURL,
 		ErrChan: make(chan error, 5),
+		Marshaler: EventMarshaler,
 	}
 }
 

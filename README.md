@@ -2,16 +2,44 @@
 
 A convenient command line tool to pipe logs to [splunknova.com](https://www.splunknova.com) and search them.
 
+# Installation
+
+## macOS
+
+````
+brew tap splunknova/nova-cli
+brew install nova-cli
+````
+
+## Linux & Windows
+
+For now, you'll need to ensure `go` is installed and `GOROOT`, `GOPATH`, and `GOBIN` are set.
+
+_We need help with making Linux and Windows installations better, please send a PR!_
+
+````
+go get github.com/splunknova/nova-cli
+cd $GOPATH/src/github.com/splunknova/nova-cli
+go install nova.go
+````
+This will install the `nova` binary to `$GOBIN`. If it isn't in your PATH, you can run `export PATH=$PATH:$GOBIN`
+
+
 # Usage
 
 ## Credentials
-Credentials can be conveniently saved in a `~/.nova` file by running
+
+Get started by creating an account on (splunknova.com)[https://www.splunknova.com/].
+API Credentials can be conveniently saved in a `~/.nova` file by running
 
 ````
 nova login
 ````
 
 ## Sending logs
+
+You can pipe logs into nova by running 
+
 ````
 echo "my first log" | nova
 
@@ -22,12 +50,12 @@ tail -f /var/log/system.log | nova
 
 ## Searching logs
 
-### Search for all lines containing the word "error"
+Search for all lines containing the word "error"
 ````
 nova search error
 ````
 
-### Only count the number of lines containing the word "error"
+Only count the number of lines containing the word "error"
 ````
 # shorthand
 nova search error -c
@@ -39,7 +67,7 @@ nova search error -s count
 nova search error -r "stats count"
 ````
 
-### Run stats aggregations and reporting on data
+Run stats aggregations and reporting on data
 ````
 # SPL inspired syntax
 nova search "my_key=" -r "stats count avg(my_key)"
@@ -50,6 +78,7 @@ nova search "bytes" -t "eval mb=gb*1024" -r "stats max(mb)"
 
 ## Sending Metrics
 
+Create metric samples by running
 ````
 # nova metric put <metric_name> <metric_value>
 nova metric put cpu.usage 20
@@ -74,25 +103,4 @@ nova metric get cpu.usage -a avg,max
 nova metric get cpu.usage -a avg -g role
 ````
 
-# Installation
-
-## macOS
-
-````
-brew tap splunknova/nova-cli
-brew install nova-cli
-````
-
-## Linux & Windows
-
-For now, you'll need to ensure `go` is installed and `GOROOT`, `GOPATH`, and `GOBIN` are set.
-
-_We need help with making Linux and Windows installations better, please send a PR!_
-
-````
-go get github.com/splunknova/nova-cli
-cd $GOPATH/src/github.com/splunknova/nova-cli
-go install nova.go
-````
-This will install the `nova` binary to `$GOBIN`
 

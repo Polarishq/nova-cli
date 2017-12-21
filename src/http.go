@@ -21,19 +21,19 @@ func init() {
 }
 
 // Post makes an HTTP POST
-func Post(targetURL string, payload io.Reader, authHeader string) ([]byte, error) {
-	log.Debugf("POST targetURL=%s, payload=%+v, auth=%s", targetURL, payload, authHeader)
+func Post(targetURL string, payload io.Reader, authHeader string, gzip bool) ([]byte, error) {
 	req, _ := http.NewRequest("POST", targetURL, payload)
 	if authHeader != "" {
 		req.Header.Add("Authorization", authHeader)
+	}
+	if gzip {
+		req.Header.Add("Content-Encoding", "gzip")
 	}
 	return doRequest(req)
 }
 
 // Get makes and HTTP GET
 func Get(targetURL string, params map[string]string, authHeader string) ([]byte, error) {
-	log.Debugf("GET targetURL=%s, params=%+v, auth=%s", targetURL, params, authHeader)
-
 	req, _ := http.NewRequest("GET", targetURL, nil)
 	req.URL.RawQuery = convertToValues(params).Encode()
 	if authHeader != "" {
@@ -45,13 +45,17 @@ func Get(targetURL string, params map[string]string, authHeader string) ([]byte,
 func doRequest(request *http.Request) ([]byte, error) {
 	request.Header.Set("User-Agent", GetUserAgent())
 	request.Header.Set("Content-Type", "application/json")
+	//log.Debug("Request Full: ", request) // too verbose
+	log.Debug("Request Headers: ", request.Header)
+	log.Debug("Request Length: ", request.ContentLength)
 	resp, err := HTTPClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("error dialing to splunknova: %+v", err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	log.Debugf("responseBody=%+v, responseCode=%+v, err=%+v", string(body), resp.StatusCode, err)
+	log.Debug("Response: ", resp)
+	log.Debug("Response Body: ", string(body))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: code:%+v, body:%+v, err:%+v", resp.StatusCode, string(body), err)
 	}

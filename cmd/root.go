@@ -14,6 +14,7 @@ import (
 var NovaURL string
 var AuthHeader string
 var Hostname string
+var Zip bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -32,7 +33,7 @@ var rootCmd = &cobra.Command{
 				tr = os.Stdin
 			}
 
-			novaIngest := src.NewNovaIngestForEvents(NovaURL, Hostname, AuthHeader)
+			novaIngest := src.NewNovaIngestForEvents(NovaURL, Hostname, AuthHeader, Zip)
 			novaIngest.Start(tr)
 			errorsEncountered := novaIngest.WaitAndLogErrors()
 			if errorsEncountered {
@@ -69,6 +70,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().BoolP("table", "", false, "tabulate results")
+	rootCmd.PersistentFlags().BoolVarP(&Zip,"zip", "z",true, "compress data before sending it to splunknova")
 	rootCmd.PersistentFlags().StringVar(&NovaURL, "novaurl", src.DefaultNovaURL, "point to a different splunknova URL (used for testing)")
 	rootCmd.PersistentFlags().MarkHidden("novaurl")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "print debug information")

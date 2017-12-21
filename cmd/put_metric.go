@@ -26,7 +26,7 @@ var putCmd = &cobra.Command{
 		b, _ := json.Marshal(map[string]interface{}{"fields": metricBody})
 		tr := strings.NewReader(string(b))
 
-		novaIngest := src.NewNovaIngestForMetrics(NovaURL, Hostname, AuthHeader)
+		novaIngest := src.NewNovaIngestForMetrics(NovaURL, Hostname, AuthHeader, true)
 		novaIngest.Start(tr)
 		errorsEncountered := novaIngest.WaitAndLogErrors()
 		if errorsEncountered {

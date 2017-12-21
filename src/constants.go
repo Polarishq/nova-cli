@@ -13,7 +13,7 @@ const metricsURLSearchPath = "/v1/metrics"
 const metricsURLIngestPath = "/v1/metrics?type=custom"
 
 const configFileRelPath = "/.nova"
-const httpTimeout = 10 * time.Second
+const httpTimeout = 20 * time.Second
 
 const ingestionBufferSizeBytes = 1000000 // server side max is 1,048,576
 const ingestionBufferTimeout = 1 * time.Second

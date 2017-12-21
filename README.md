@@ -23,9 +23,9 @@ brew install nova-cli
 
 ### Linux & Windows
 
-On Linux, by default Go is installed to directory `/usr/local/go/`, and the `GOROOT` environment variable is set to `/usr/local/go/bin`.
+**Linux**: By default Go is installed to directory `/usr/local/go/`, and the `GOROOT` environment variable is set to `/usr/local/go/bin`.
 
-On Windows, by default Go is installed in the directory `C:\Go`, the `GOROOT` environment variable is set to `C:\Go\`, and the bin directory is added to your Path (`C:\Go\bin`).
+**Windows**: By default Go is installed in the directory `C:\Go`, the `GOROOT` environment variable is set to `C:\Go\`, and the bin directory is added to your Path (`C:\Go\bin`).
 
 To install Nova CLI using Go, in the command-line run:
 
@@ -83,7 +83,7 @@ returns a list of `my first logs` sent to nova:
 2018-1-18T23:53:08.000+00:00 my first log
 2018-1-18T23:52:38.000+00:00 my first cli log
 ```
-One example of a `cat ` command for system log files would be to pipe `system.log to ` | nova`:
+One example of a `cat ` command for system log files would be to pipe `system.log` to Splunk Nova:
 ```
 cat /var/log/system.log | nova
 ```
@@ -99,8 +99,12 @@ Returns:
 2017-12-21T00:02:07.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
 2017-12-18T23:54:15.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
 ```
+
+When you need to look for specific events from log files, your may want to use 'tail'
+```
 tail -f /var/log/system.log | nova
 ````
+The `-f` follow flag causes  tail, after printing lines from the end of the file in reverse  order, to keep watch and print further data as it appears. Super helpful for ...? (One last tip about the tail command. Well, when you review the help page for tail, read the -s, or sleep, option as it automates the review of log files, which is a good security precaution.) transform this method to "tail" multiple files since "tail" is able to watch more than one file...Since your node might stay alive for many days, you may need some logrotation tool to replace the file you're lurking?
 
 ### Search logs
 
@@ -158,7 +162,7 @@ nova metric get cpu.usage -a avg -g role
 ````
 
 
-[go]: https://golang.org/dl/
+[Go]: https://golang.org/dl/
 [homebrew]: https://brew.sh/
 [nova]: https://www.splunknova.com/
 

@@ -1,54 +1,108 @@
-# nova-cli
+# Nova CLI
 
-A convenient command line tool to pipe logs to [splunknova.com](https://www.splunknova.com) and search them.
+A convenient command-line tool for sending and searching logs using [splunknova.com](https://www.splunknova.com).
 
-# Installation
+## Get Started
+Get started by creating an account on https://www.splunknova.com.
 
-## macOS
+## Install
 
-````
+Set up your [Go] environment.  Refer to the official Go documentation for more details: https://golang.org/doc/code.html. Once Go is downloaded and installed, you'll need to set your `GOROOT`, `GOPATH`, and `GOBIN`.
+
+### macOS
+
+[Homebrew] is a package manager for macOS that makes it easy to install Nova CLI. In a terminal window, run:
+
+```
 brew tap splunknova/nova-cli
+```
+
+```
 brew install nova-cli
-````
+```
 
-## Linux & Windows
+### Linux & Windows
 
-For now, you'll need to ensure `go` is installed and `GOROOT`, `GOPATH`, and `GOBIN` are set.
+On Linux, by default Go is installed to directory `/usr/local/go/`, and the `GOROOT` environment variable is set to `/usr/local/go/bin`.
 
-_We need help with making Linux and Windows installations better, please send a PR!_
+On Windows, by default Go is installed in the directory `C:\Go`, the `GOROOT` environment variable is set to `C:\Go\`, and the bin directory is added to your Path (`C:\Go\bin`).
 
-````
+To install Nova CLI using Go, in the command-line run:
+
+```
 go get github.com/splunknova/nova-cli
+```
+Change directories into the `nova-cli` repository.
+```
 cd $GOPATH/src/github.com/splunknova/nova-cli
+```
+Install the `nova` binary to `$GOBIN`.
+```
 go install nova.go
-````
-This will install the `nova` binary to `$GOBIN`. If it isn't in your PATH, you can run `export PATH=$PATH:$GOBIN`
+```
+ If it isn't in your PATH, you can run `export PATH=$PATH:$GOBIN`
 
 
-# Usage
+## Usage
 
-## Credentials
+If you haven't already, [sign up or log in][nova]  to obtain client credentials to get started.
 
-Get started by creating an account on (splunknova.com)[https://www.splunknova.com/].
-API Credentials can be conveniently saved in a `~/.nova` file by running
+### Credentials
+
+Save your Splunk Nova client credentials in `~/.nova` file by running:
 
 ````
 nova login
 ````
+You will be prompted to enter your `Client ID` and `Client Secret`:
+```
+Please enter Client ID: <Your Client ID>
+Please enter Client Secret: <Your Client Secret>
+```
+Once your credentials are entered, you
+```
+INFO[0016] Login succeeded
+```
 
-## Sending logs
+### Send logs
 
-You can pipe logs into nova by running 
+You can pipe logs into Splunk Nova by running:
 
-````
+```
 echo "my first log" | nova
+```
+This sends a log string: `"my first log"` to nova. You can then search your logs from the CLI using `nova search`. For example:
 
+```
+nova search "my first log"
+```
+returns a list of `my first logs` sent to nova:
+
+```
+2018-1-19T19:35:01.000+00:00 my first log
+2018-1-18T23:53:08.000+00:00 my first log
+2018-1-18T23:52:38.000+00:00 my first cli log
+```
+One example of a `cat ` command for system log files would be to pipe `system.log to ` | nova`:
+```
 cat /var/log/system.log | nova
+```
+and then search:
 
+```
+nova search system.log
+```
+
+Returns:
+```
+2017-12-21T00:02:07.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
+2017-12-21T00:02:07.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
+2017-12-18T23:54:15.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
+```
 tail -f /var/log/system.log | nova
 ````
 
-## Searching logs
+### Search logs
 
 Search for all lines containing the word "error"
 ````
@@ -104,3 +158,11 @@ nova metric get cpu.usage -a avg -g role
 ````
 
 
+[go]: https://golang.org/dl/
+[homebrew]: https://brew.sh/
+[nova]: https://www.splunknova.com/
+
+
+in Use:
+
+You can post metrics to your datadog account by using:

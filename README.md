@@ -196,37 +196,62 @@ main.main()
 
 ## Sending Metrics
 
-Create metric samples by running
-````
-# nova metric put <metric_name> <metric_value>
+A metric is a set of measurements containing a timestamp, a metric name, a value, and a dimension. See [Overview of metrics][overview] and [Get started with metrics][getstarted].
+
+You can post metrics to your Splunk Nova account by running
+
+Syntax:
+```
+nova metric put <metric_name> <metric_value>
+```
+
+Example:
+```
 nova metric put cpu.usage 20
+```
 
-# tagging with dimensions
+## Tagging with dimensions
+Provide metadata about the metric. For example:
+- Region: `region:us-east-1, us-west-1, us-west-2, us-central1`
+- Instance Types: `t2.medium, t2.large, m3.large, n1-highcpu-2`
+- Technology: `nginx, redis, tomcat`
+
+You can think of a metric name as something that you are measuring, while dimensions are categories by which you can filter or group the results.
+
+Example:
+```
 nova metric put cpu.usage 20 -d "region:us-east-1,role:webserver"
-````
+```
 
-## Listing Metrics
+## List Metrics
 
-````
+List all Metrics
+
+Example:
+```
 nova metric ls
-````
+```
 
-## Aggregating Metrics
+## Aggregate Metrics
 
-````
-# simple aggregations
+Simple aggregations
+
+Example:
+```
 nova metric get cpu.usage -a avg,max
+```
 
-# grouping by dimensions
+Group by dimensions
+
+Example:
+```
 nova metric get cpu.usage -a avg -g role
-````
+```
 
 
+[getstarted]: http://docs.splunk.com/Documentation/Splunk/7.0.1/Metrics/GetStarted
 [Go]: https://golang.org/dl/
 [homebrew]: https://brew.sh/
 [nova]: https://www.splunknova.com/
 [novalogin]: https://www.splunknova.com/login
-
-in Use:
-
-You can post metrics to your datadog account by using:
+[overview]: http://docs.splunk.com/Documentation/Splunk/7.0.1/Metrics/Overview

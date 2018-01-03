@@ -1,0 +1,6 @@
+package: github.com/splunknova/nova-cli
+import:
+- package: github.com/Sirupsen/logrus
+  version: ~1.0.4
+- package: github.com/spf13/cobra
+  version: ~0.0.1

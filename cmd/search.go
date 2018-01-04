@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/splunknova/nova-cli/src"
+	"github.com/splunknova/nova-cli/source"
 	"os"
 	log "github.com/Sirupsen/logrus"
 )
@@ -13,15 +13,15 @@ var searchCmd = &cobra.Command{
 	Short: "Search splunknova for events",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		clientID, clientSecret, err := src.GetCredentials(NovaURL)
+		clientID, clientSecret, err := source.GetCredentials(NovaURL)
 		if err != nil {
 			log.Error(err)
 			log.Infof("Please run `nova login`")
 			os.Exit(1)
 		}
-		authHeader := src.GetBasicAuthHeader(clientID, clientSecret)
+		authHeader := source.GetBasicAuthHeader(clientID, clientSecret)
 
-		novaSearch := src.NewNovaSearch(NovaURL, authHeader)
+		novaSearch := source.NewNovaSearch(NovaURL, authHeader)
 
 		reportStr := ""
 		count, _ := cmd.LocalFlags().GetBool("count")

@@ -26,14 +26,15 @@ This will install the `nova` binary to `$GOBIN`. If it isn't in your PATH, you c
 
 ## Binaries
 
-We may also have have binaries for download on the (latest release)[https://github.com/splunknova/nova-cli/releases/latest].
-Shout out on (slack)[http://community.splunknova.com] if you need a particular binary!
+We may also have have binaries for download on the [latest release](https://github.com/splunknova/nova-cli/releases/latest).
+Shout out on [slack](http://community.splunknova.com) if you need a particular binary!
 
 # Usage
 
 ## Credentials
 
-Get started by creating an account on (splunknova.com)[https://www.splunknova.com/].
+Get started by creating an account on [splunknova.com](https://www.splunknova.com/).
+
 API Credentials can be conveniently saved in a `~/.nova` file by running
 
 ````

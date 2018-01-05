@@ -24,6 +24,10 @@ go install nova.go
 ````
 This will install the `nova` binary to `$GOBIN`. If it isn't in your PATH, you can run `export PATH=$PATH:$GOBIN`
 
+## Binaries
+
+We may also have have binaries for download on the (latest release)[https://github.com/splunknova/nova-cli/releases/latest].
+Shout out on (slack)[http://community.splunknova.com] if you need a particular binary!
 
 # Usage
 

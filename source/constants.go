@@ -2,7 +2,7 @@ package source
 
 import "time"
 
-const AppVersion = "0.3.2"
+const AppVersion = "0.3.3"
 
 const DefaultNovaURL = "https://api.splunknova.com"
 

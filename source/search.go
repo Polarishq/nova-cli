@@ -58,13 +58,15 @@ func (n *NovaSearch) Search(keywords, transforms, report string) (StrMatrix) {
 		"count":      defaultSearchResultsCount,
 	}
 
+	data := StrMatrix{}
+
 	results, err := Get(n.NovaURL+eventsURLPath, params, n.Auth)
 	if err != nil {
 		log.Error(err)
+		return data
 	}
 	log.Debugf("Raw Results: %+v\n\n", string(results))
 
-	data := StrMatrix{}
 	if report == "" {
 		n1 := NovaResults{}
 		json.Unmarshal(results, &n1)

@@ -42,14 +42,20 @@ go install nova.go
 ```
  If it isn't in your PATH, you can run `export PATH=$PATH:$GOBIN`
 
-
 ## Usage
 
 If you haven't already, [sign up or log in][nova] to obtain your Splunk Nova API credentials to get started.
 
+### Binaries
+
+We may also have have binaries for download on the [latest release](https://github.com/splunknova/nova-cli/releases/latest).
+Shout out on [slack](http://community.splunknova.com) if you need a particular binary!
+
 ### Credentials
 
-Save your Splunk Nova API client credentials in `~/.nova` file by running:
+Get started by creating an account on [splunknova.com](https://www.splunknova.com/).
+
+API Credentials can be conveniently saved in a `~/.nova` file by running
 
 ````
 nova login

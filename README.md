@@ -152,24 +152,7 @@ nova search "my_key=" -r "stats count avg(my_key)"
 Returns a go routine that reports all usages of your Splunk Nova API credentials.
 
 ```
-ERRO[0000] error communicating with splunknova. X-SPLUNK-REQ-ID=296890cdea349f739c8ffcd15828554d code:405, body:{"code":405,"message":"Error in 'search' command: Unable to parse the search: Comparator '=' is missing a term on the right hand side. in keywords"}
-panic: runtime error: index out of range
-
-goroutine 1 [running]:
-github.com/splunknova/nova-cli/src.(*NovaSearch).Search(0xc420053c98, 0xc420014500, 0x19, 0x0, 0x0, 0x7fff5fbffb9f, 0x17, 0x0, 0x0, 0x0)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/src/search.go:77 +0xd09
-github.com/splunknova/nova-cli/cmd.glob..func10(0x154cea0, 0xc42007d020, 0x1, 0x3)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/cmd/search.go:40 +0x3ac
-github.com/spf13/cobra.(*Command).execute(0x154cea0, 0xc42007cf90, 0x3, 0x3, 0x154cea0, 0xc42007cf90)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:750 +0x2c1
-github.com/spf13/cobra.(*Command).ExecuteC(0x154c120, 0xc420053f30, 0xc420053f38, 0x12c5a3e)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:831 +0x30e
-github.com/spf13/cobra.(*Command).Execute(0x154c120, 0x0, 0x154bca0)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:784 +0x2b
-github.com/splunknova/nova-cli/cmd.Execute()
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/cmd/root.go:52 +0x31
-main.main()
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/nova.go:20 +0x20
+example here
 ```
 Add transforming commands, a type of search command that orders the results into a data table
 
@@ -179,22 +162,8 @@ nova search "bytes" -t "eval mb=gb*1024" -r "stats max(mb)"
 Returns
 
 ```
-panic: runtime error: index out of range
-goroutine 1 [running]:
-github.com/splunknova/nova-cli/src.(*NovaSearch).Search(0xc420053c98, 0xc420014500, 0x17, 0x7fff5fbffb95, 0xf, 0x7fff5fbffba8, 0xd, 0x0, 0x0, 0x0)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/src/search.go:77 +0xd09
-github.com/splunknova/nova-cli/cmd.glob..func10(0x154cea0, 0xc420086280, 0x1, 0x5)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/cmd/search.go:40 +0x3ac
-github.com/spf13/cobra.(*Command).execute(0x154cea0, 0xc420086230, 0x5, 0x5, 0x154cea0, 0xc420086230)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:750 +0x2c1
-github.com/spf13/cobra.(*Command).ExecuteC(0x154c120, 0xc420053f30, 0xc420053f38, 0x12c5a3e)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:831 +0x30e
-github.com/spf13/cobra.(*Command).Execute(0x154c120, 0x0, 0x154bca0)
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/spf13/cobra/command.go:784 +0x2b
-github.com/splunknova/nova-cli/cmd.Execute()
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/src/github.com/splunknova/nova-cli/cmd/root.go:52 +0x31
-main.main()
-	/private/tmp/nova-cli-20171218-11224-1uzn9g4/nova.go:20 +0x20
+```
+example here
 ```
 
 ## Sending Metrics

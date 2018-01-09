@@ -7,21 +7,23 @@ Get started by creating an account on https://www.splunknova.com.
 
 ## Install
 
-Set up your [Go] environment.  Refer to the official Go documentation for more details: https://golang.org/doc/code.html. Once Go is downloaded and installed, you'll need to set your `GOROOT`, `GOPATH`, and `GOBIN`.
-
+You can install Nova-CLI or download the [binaries] directly.
 ### macOS
 
 [Homebrew] is a package manager for macOS that makes it easy to install Nova CLI. In a terminal window, run:
 
-```
+```bash
 brew tap splunknova/nova-cli
-```
-
-```
 brew install nova-cli
 ```
+### Binaries
+
+We may also have have binaries for download on the [latest release](https://github.com/splunknova/nova-cli/releases/latest).
+Shout out on [slack](http://community.splunknova.com) if you need a particular binary!
 
 ### Linux & Windows
+
+Set up your [Go] environment. Refer to the official Go documentation for more details: https://golang.org/doc/code.html. Once Go is downloaded and installed, you'll need to set your `GOROOT`, `GOPATH`, and `GOBIN`.
 
 **Linux**: By default Go is installed to directory `/usr/local/go/`, and the `GOROOT` environment variable is set to `/usr/local/go/bin`.
 
@@ -45,11 +47,6 @@ go install nova.go
 ## Usage
 
 If you haven't already, [sign up or log in][nova] to obtain your Splunk Nova API credentials to get started.
-
-### Binaries
-
-We may also have have binaries for download on the [latest release](https://github.com/splunknova/nova-cli/releases/latest).
-Shout out on [slack](http://community.splunknova.com) if you need a particular binary!
 
 ### Credentials
 

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/splunknova/nova-cli/src"
+	"github.com/splunknova/nova-cli/source"
 	"io"
 	log "github.com/Sirupsen/logrus"
 	"net/url"
@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 				tr = os.Stdin
 			}
 
-			novaIngest := src.NewNovaIngestForEvents(NovaURL, Hostname, AuthHeader)
+			novaIngest := source.NewNovaIngestForEvents(NovaURL, Hostname, AuthHeader)
 			novaIngest.Start(tr)
 			errorsEncountered := novaIngest.WaitAndLogErrors()
 			if errorsEncountered {
@@ -56,20 +56,20 @@ func Execute() {
 }
 
 func Authorize(cmd *cobra.Command, args []string) {
-	clientID, clientSecret, err := src.GetCredentials(NovaURL)
+	clientID, clientSecret, err := source.GetCredentials(NovaURL)
 	if err != nil {
 		log.Error(err)
 		log.Infof("Please run `nova login`")
 		os.Exit(1)
 	}
-	AuthHeader = src.GetBasicAuthHeader(clientID, clientSecret)
+	AuthHeader = source.GetBasicAuthHeader(clientID, clientSecret)
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().BoolP("table", "", false, "tabulate results")
-	rootCmd.PersistentFlags().StringVar(&NovaURL, "novaurl", src.DefaultNovaURL, "point to a different splunknova URL (used for testing)")
+	rootCmd.PersistentFlags().StringVar(&NovaURL, "novaurl", source.DefaultNovaURL, "point to a different splunknova URL (used for testing)")
 	rootCmd.PersistentFlags().MarkHidden("novaurl")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "print debug information")
 

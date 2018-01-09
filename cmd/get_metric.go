@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/splunknova/nova-cli/src"
+	"github.com/splunknova/nova-cli/source"
 	"strings"
 	"os"
 )
@@ -14,7 +14,7 @@ var getCmd = &cobra.Command{
 	Args: cobra.RangeArgs(1, 3),
 	PreRun: Authorize,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := src.NewNovaMetricsSearch(NovaURL, AuthHeader)
+		m := source.NewNovaMetricsSearch(NovaURL, AuthHeader)
 
 		aggregations, _ := cmd.Flags().GetString("aggregations")
 		span, _ := cmd.Flags().GetString("span")

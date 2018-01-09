@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/splunknova/nova-cli/src"
+	"github.com/splunknova/nova-cli/source"
 
 	"os"
 	"strings"
@@ -26,7 +26,7 @@ var putCmd = &cobra.Command{
 		b, _ := json.Marshal(map[string]interface{}{"fields": metricBody})
 		tr := strings.NewReader(string(b))
 
-		novaIngest := src.NewNovaIngestForMetrics(NovaURL, Hostname, AuthHeader)
+		novaIngest := source.NewNovaIngestForMetrics(NovaURL, Hostname, AuthHeader)
 		novaIngest.Start(tr)
 		errorsEncountered := novaIngest.WaitAndLogErrors()
 		if errorsEncountered {

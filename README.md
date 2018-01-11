@@ -10,7 +10,7 @@ Get started by creating an account on https://www.splunknova.com.
 You can install Nova-CLI or download the [binaries] directly.
 ### macOS
 
-[Homebrew] is a package manager for macOS that makes it easy to install Nova CLI. In a terminal window, run:
+[Homebrew](https://brew.sh/) is a package manager for macOS that makes it easy to install Nova CLI. In a terminal window, run:
 
 ```bash
 brew tap splunknova/nova-cli

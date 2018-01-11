@@ -1,3 +1,22 @@
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [Nova CLI](#nova-cli)
+	- [Get Started](#get-started)
+	- [Install](#install)
+		- [macOS](#macos)
+		- [Binaries](#binaries)
+		- [Linux & Windows](#linux-windows)
+	- [Usage](#usage)
+		- [Credentials](#credentials)
+		- [Send logs](#send-logs)
+		- [Search logs](#search-logs)
+		- [Send metrics](#send-metrics)
+		- [Tag with dimensions](#tag-with-dimensions)
+		- [List metrics](#list-metrics)
+		- [Aggregate metrics](#aggregate-metrics)
+
+<!-- /TOC -->
+
 # Nova CLI
 
 A convenient command-line tool for sending and searching logs using [splunknova.com](https://www.splunknova.com).
@@ -7,7 +26,7 @@ Get started by creating an account on https://www.splunknova.com.
 
 ## Install
 
-You can install Nova-CLI or download the [binaries] directly.
+You can install Nova-CLI or download the [binaries](#binaries) directly.
 ### macOS
 
 [Homebrew] is a package manager for macOS that makes it easy to install Nova CLI. In a terminal window, run:
@@ -67,7 +86,7 @@ Once your credentials are entered, you should see:
 INFO[0016] Login succeeded
 ```
 
-## Send logs
+### Send logs
 
 You can pipe logs into Splunk Nova by running:
 
@@ -95,7 +114,7 @@ and then search:
 nova search system.log
 ```
 
-Returns:
+**Returns:**
 ```
 2017-12-21T00:02:07.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
 2017-12-21T00:02:07.000+00:00 	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
@@ -108,7 +127,7 @@ tail -f /var/log/system.log | nova
 ```
 Use the -f or --follow flag after tail, to show a real-time, streaming output of a changing file. It keeps watch and prints further data as it appears.
 
-## Search logs
+### Search logs
 
 Search all logs containing the word "error"
 
@@ -140,82 +159,82 @@ nova search error -s count
 
 With the `stats` command you can specify a statistical function such as `count` to create a report of all errors. (How is this different than error -c?)
 
-```
+```bash
 nova search error -r "stats count"
 ```
 
 Run stats aggregations and reporting on data using Splunk Processing Language (SPL) inspired syntax. For example:
 
-```
+```bash
 nova search "my_key=" -r "stats count avg(my_key)"
 ```
 Returns a go routine that reports all usages of your Splunk Nova API credentials.
 
-```
+```bash
 example here
 ```
 Add transforming commands, a type of search command that orders the results into a data table
 
-```
+```bash
 nova search "bytes" -t "eval mb=gb*1024" -r "stats max(mb)"
-````
-Returns
+```
+Returns:
 
-```
-```
+```bash
 example here
 ```
 
-## Sending Metrics
+### Send metrics
 
 A metric is a set of measurements containing a timestamp, a metric name, a value, and a dimension. See [Overview of metrics][overview] and [Get started with metrics][getstarted].
 
 You can post metrics to your Splunk Nova account by running
 
-Syntax:
-```
+**Syntax:**
+```bash
 nova metric put <metric_name> <metric_value>
 ```
 
-Example:
-```
+**Example:**
+```bash
 nova metric put cpu.usage 20
 ```
 
-## Tagging with dimensions
+### Tag with dimensions
+
 Provide metadata about the metric. For example:
-- Region: `region:us-east-1, us-west-1, us-west-2, us-central1`
-- Instance Types: `t2.medium, t2.large, m3.large, n1-highcpu-2`
-- Technology: `nginx, redis, tomcat`
+-   Region: `region:us-east-1, us-west-1, us-west-2, us-central1`
+-   Instance Types: `t2.medium, t2.large, m3.large, n1-highcpu-2`
+-   Technology: `nginx, redis, tomcat`
 
 You can think of a metric name as something that you are measuring, while dimensions are categories by which you can filter or group the results.
 
-Example:
+**Example:**
 ```
 nova metric put cpu.usage 20 -d "region:us-east-1,role:webserver"
 ```
 
-## List Metrics
+### List metrics
 
-List all Metrics
+List all metrics
 
-Example:
+**Example:**
 ```
 nova metric ls
 ```
 
-## Aggregate Metrics
+### Aggregate metrics
 
 Simple aggregations
 
-Example:
+**Example:**
 ```
 nova metric get cpu.usage -a avg,max
 ```
 
 Group by dimensions
 
-Example:
+**Example:**
 ```
 nova metric get cpu.usage -a avg -g role
 ```

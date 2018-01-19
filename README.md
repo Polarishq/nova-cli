@@ -1,5 +1,7 @@
 # Nova CLI
 
+[![Travis Status for Nova CLI](https://travis-ci.org/splunknova/nova-cli.svg?branch=master)](https://travis-ci.org/splunknova/nova-cli)
+
 A convenient command-line tool for sending and searching logs using [splunknova.com](https://www.splunknova.com).
 
 ## Get Started

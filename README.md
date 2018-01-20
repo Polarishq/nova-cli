@@ -255,6 +255,15 @@ Example:
 nova metric get cpu.usage -a avg -g role
 ```
 
+## How to export the new releases
+
+In order to export the new releases, you would need to:
+
+1. create a new git tag
+1. export your GITHUB_TOKEN
+1. run gorealser in nova-cli folder
+
+
 [getstarted]: http://docs.splunk.com/Documentation/Splunk/7.0.1/Metrics/GetStarted
 [Go]: https://golang.org/dl/
 [homebrew]: https://brew.sh/

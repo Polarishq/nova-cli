@@ -76,8 +76,10 @@ func (n *NovaSearch) Search(keywords, transforms, report string) (StrMatrix) {
 	} else {
 		n1 := NovaResultsStats{}
 		json.Unmarshal(results, &n1)
-		for k, v := range n1.NovaEvents[0] {
-			data = append(data, []string{k, v})
+		if len(n1.NovaEvents) > 0 {
+			for k, v := range n1.NovaEvents[0] {
+				data = append(data, []string{k, v})
+			}		
 		}
 	}
 	return data

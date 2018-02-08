@@ -7,21 +7,13 @@ import (
 	//"strings"
 	"encoding/json"
 	"fmt"
+	"bytes"
 )
 
 type NovaMetricsSearch struct {
 	Auth    string
 	NovaURL string
 	ErrChan chan error
-}
-
-type MetricsLSResponse struct {
-	Metrics []string `json:"metrics"`
-}
-
-type MetricsGetResponse struct {
-	Aggregations []string `json:"aggregations"`
-	Dimensions []string `json:"dimensions"`
 }
 
 // NewNovaSearch creates a new search obj
@@ -45,7 +37,7 @@ func (n *NovaMetricsSearch) WaitAndLogErrors() (errorsEncountered bool) {
 func (n *NovaMetricsSearch) GetLs() (StrMatrix, error) {
 	defer close(n.ErrChan)
 
-	urlFinal := n.NovaURL + metricsURLSearchPath
+	urlFinal := n.NovaURL + metricsListPath
 
 	results, err := Get(urlFinal, nil, n.Auth)
 	if err != nil {
@@ -64,36 +56,55 @@ func (n *NovaMetricsSearch) GetLs() (StrMatrix, error) {
 }
 
 
-func (n *NovaMetricsSearch) GetAggregations(metric_names, aggregations, groupBy, span string) (StrMatrix, error) {
+func (n *NovaMetricsSearch) GetStats(metric_names, stats, groupBy []string, span string) (data StrMatrix, err error) {
 	defer close(n.ErrChan)
 
 	log.Debugf("Searching metric_names='%+v'", metric_names)
-	log.Debugf("Searching aggregations='%+v'", aggregations)
+	log.Debugf("Searching stats='%+v'", stats)
 	log.Debugf("Searching groupBy='%+v'", groupBy)
 	log.Debugf("Searching span='%+v'", span)
 
-	params := map[string]string{
-		"group_by":       groupBy,
-		"span":           span,
+	urlFinal := n.NovaURL + "/v1/search/stats"
+
+	searchQuery := NovaSearchStatsQuery{
+		Fields:     metric_names,
+		FieldsType: "metrics",
+		GroupBy:    groupBy,
+		Stats:      stats,
+		Span:       span,
+		Blocking:   true,
 	}
+	searchQueryJSON, _ := json.Marshal(searchQuery)
+	bytes := &bytes.Buffer{}
+	bytes.Write(searchQueryJSON)
 
-	urlFinal := n.NovaURL + metricsURLSearchPath + "/" + metric_names + "/" + aggregations
-
-	results, err := Get(urlFinal, params, n.Auth)
+	results, err := Post(urlFinal, bytes, n.Auth)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return
 	}
-	log.Debugf("Raw Results: %+v\n\n", string(results))
+	log.Debugf("Raw Results: %+v", string(results))
+	itemsJSON, err := ParseSearchResults(results)
+	if err != nil {
+		return
+	}
 
-	m := []map[string]string{}
-	json.Unmarshal(results, &m)
-	data := StrMatrix{}
-	if len(m) < 1 {
-		return data, nil
+	items := []map[string]interface{}{}
+	err = json.Unmarshal(itemsJSON, &items)
+	if err != nil{
+		log.Error(err)
+		return
 	}
-	for k, v := range m[0] {
-		data = append(data, []string{k, v})
+
+	if len(items) > 0 {
+		for k, v := range items[0] {
+			if vStr, ok := v.(string); ok {
+				data = append(data, []string{k, vStr})
+			} else {
+				log.Warningf("Skipping non-string value %+v", v)
+			}
+		}
+		log.Debugf("Processed Results: %+v", data)
 	}
-	return data, nil
+	return
 }

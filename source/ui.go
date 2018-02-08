@@ -9,7 +9,6 @@ const field1MaxWidth = 30
 const field2MaxWidth = 100
 const fieldPadding = 2
 
-type StrMatrix [][]string
 
 func (s StrMatrix) PrintList () {
 	for _, datum := range s {

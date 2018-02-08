@@ -16,11 +16,12 @@ var getCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		m := source.NewNovaMetricsSearch(NovaURL, AuthHeader)
 
-		aggregations, _ := cmd.Flags().GetString("aggregations")
+		stats, _ := cmd.Flags().GetString("stats")
 		span, _ := cmd.Flags().GetString("span")
 		group, _ := cmd.Flags().GetString("group")
 
-		data, err := m.GetAggregations(strings.Join(args, ","), aggregations, group, span)
+		data, err := m.GetStats(args, strings.Split(stats, ","), strings.Split(group, ","), span)
+
 		if err != nil {
 			os.Exit(1)
 		}
@@ -34,8 +35,8 @@ var getCmd = &cobra.Command{
 
 func init() {
 	metricCmd.AddCommand(getCmd)
-	getCmd.Flags().StringP("aggregations", "a", "", "stats aggregations to run on metrics (e.g. avg, min, max, etc.)")
-	getCmd.MarkFlagRequired("aggregations")
-	getCmd.Flags().StringP("group", "g", "", "group aggregations by dimensions")
-	getCmd.Flags().StringP("span", "s", "", "group aggregations by time span (1m, 1s, 1d)")
+	getCmd.Flags().StringP("stats", "s", "", "stats to run on metrics (e.g. avg, min, max, etc.)")
+	getCmd.MarkFlagRequired("stats")
+	getCmd.Flags().StringP("group", "g", "", "group stats by dimensions")
+	getCmd.Flags().String("span",  "", "group stats by time span (1m, 1s, 1d)")
 }

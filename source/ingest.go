@@ -27,18 +27,12 @@ type NovaIngest struct {
 	Type    int
 }
 
-type novaEventFormat struct {
-	Source string            `json:"source"`
-	Entity string            `json:"entity"`
-	Event  map[string]string `json:"event"`
-}
-
 func NewNovaIngestForEvents(novaURL, entity, auth string) *NovaIngest {
 	return &NovaIngest{
 		Source:  novaCLISourcePrefix + pseudoRandomID(),
 		Entity:  entity,
 		Auth:    auth,
-		NovaURL: novaURL+eventsURLPath,
+		NovaURL: novaURL+ eventsIngestPath,
 		ErrChan: make(chan error, 5),
 		Type: EventIngestor,
 	}
@@ -49,7 +43,7 @@ func NewNovaIngestForMetrics(novaURL, entity, auth string) *NovaIngest {
 		Source:  novaCLISourcePrefix + pseudoRandomID(),
 		Entity:  entity,
 		Auth:    auth,
-		NovaURL: novaURL+ metricsURLIngestPath,
+		NovaURL: novaURL+ metricsIngestPath,
 		ErrChan: make(chan error, 5),
 		Type: MetricIngestor,
 	}
@@ -144,7 +138,7 @@ func (n *NovaIngest) sendToNova(inChan chan *bytes.Buffer) {
 
 func (n *NovaIngest) marshal(line string) ([]byte, error) {
 	if n.Type == EventIngestor {
-		nEvent := novaEventFormat{Source: n.Source, Entity: n.Entity, Event: map[string]string{"raw": line}}
+		nEvent := NovaOutgoingEventFormat{Source: n.Source, Entity: n.Entity, Event: map[string]string{"raw": line}}
 		return json.Marshal(nEvent)
 	} else if n.Type == MetricIngestor {
 		return []byte(line), nil

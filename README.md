@@ -237,14 +237,14 @@ Example:
 nova metric ls
 ```
 
-## Aggregate Metrics
+## Aggregate Metrics using Statistical Functions
 
-Simple aggregations
+Simple stats
 
 Example:
 
 ```bash
-nova metric get cpu.usage -a avg,max
+nova metric get cpu.usage -s avg,max
 ```
 
 Group by dimensions
@@ -252,7 +252,7 @@ Group by dimensions
 Example:
 
 ```bash
-nova metric get cpu.usage -a avg -g role
+nova metric get cpu.usage -s avg -g role
 ```
 
 ## How to export the new releases

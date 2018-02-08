@@ -4,23 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"strings"
+	"bytes"
 )
 
 type NovaSearch struct {
 	Auth    string
 	NovaURL string
 	ErrChan chan error
-}
-
-type NovaResults struct {
-	NovaEvents []struct {
-		Time string `json:"time"`
-		Raw  string `json:"event.raw"`
-	} `json:"events"`
-}
-
-type NovaResultsStats struct {
-	NovaEvents []map[string]string `json:"events"`
 }
 
 // NewNovaSearch creates a new search obj
@@ -41,47 +32,72 @@ func (n *NovaSearch) WaitAndLogErrors() (errorsEncountered bool) {
 	return
 }
 
-
-func (n *NovaSearch) Search(keywords, transforms, report string) (StrMatrix) {
+func (n *NovaSearch) Search(searchTerms, transforms, report string) (data StrMatrix) {
 	defer close(n.ErrChan)
 
-	log.Debugf("Searching keywords='%+v'", keywords)
+	log.Debugf("Searching searchTerms='%+v'", searchTerms)
 	log.Debugf("Searching transforms='%+v'", transforms)
 	log.Debugf("Searching report='%+v'", report)
 
-	keywords = fmt.Sprintf("source=%s* %s", novaCLISourcePrefix, keywords)
+	searchTerms = fmt.Sprintf("source=%s* %s", novaCLISourcePrefix, searchTerms)
 
-	params := map[string]string{
-		"keywords":   keywords,
-		"transforms": transforms,
-		"report":     report,
-		"count":      defaultSearchResultsCount,
+	searchQuery := NovaSearchEventsQuery{
+		Blocking: true,
+		SearchTerms: searchTerms,
+		Transforms: strings.Split(transforms, ","),
+		Reports: strings.Split(report, ","),
+		Mode: "raw_1000",
 	}
 
-	data := StrMatrix{}
+	searchQueryJSON, _ := json.Marshal(searchQuery)
+	bytes := &bytes.Buffer{}
+	bytes.Write(searchQueryJSON)
 
-	results, err := Get(n.NovaURL+eventsURLPath, params, n.Auth)
+	results, err := Post(n.NovaURL+eventsSearchPath, bytes, n.Auth)
 	if err != nil {
 		log.Error(err)
-		return data
+		return
 	}
-	log.Debugf("Raw Results: %+v\n\n", string(results))
+	log.Debugf("Raw Results: %+v", string(results))
 
-	if report == "" {
-		n1 := NovaResults{}
-		json.Unmarshal(results, &n1)
-		for _, ne := range n1.NovaEvents {
-			data = append(data, []string{ne.Time, ne.Raw})
+	itemsJSON, err := ParseSearchResults(results)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	log.Debugf("ItemsJSON: %+v", string(itemsJSON))
+
+	if report != "" {
+		events := NovaIncomingEventReporting{}
+		err = json.Unmarshal(itemsJSON, &events)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Debugf("reporting: %+v", events)
+		if len(events) > 0 {
+			if kvFoo, ok := events[0].Payload.(map[string]interface{}); ok {
+				for k, v := range kvFoo {
+					if vStr, ok := v.(string); ok {
+						data = append(data, []string{k, vStr})
+					}
+				}
+			}
 		}
 	} else {
-		n1 := NovaResultsStats{}
-		json.Unmarshal(results, &n1)
-		if len(n1.NovaEvents) > 0 {
-			for k, v := range n1.NovaEvents[0] {
-				data = append(data, []string{k, v})
-			}		
+		events := NovaIncomingEventNonReporting{}
+		err = json.Unmarshal(itemsJSON, &events)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Debugf("non reporting: %+v", events)
+		for _, e1 := range events {
+			data = append(data, []string{e1.Time ,e1.Payload.Event.Raw})
 		}
 	}
+
+	log.Debugf("Processed Results: %+v", data)
+
 	return data
 }
 
